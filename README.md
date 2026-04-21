@@ -19,7 +19,7 @@ Nothing is sent anywhere except the API call you were already making.
 pip install claude-act
 ```
 
-Public launchers:
+Public launchers (all wired to the same ACT Ledger CLI home/help screen):
 
 - `actl`
 - `act-ledger`
