@@ -1,0 +1,4 @@
+[console_scripts]
+act-ledger = claude_act.cli.main:main
+actl = claude_act.cli.main:main
+claude-act = claude_act.cli.main:main

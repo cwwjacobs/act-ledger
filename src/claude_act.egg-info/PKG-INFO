@@ -1,0 +1,132 @@
+Metadata-Version: 2.4
+Name: claude-act
+Version: 0.1.0
+Summary: ACT Ledger — local-first API cost tracking and session trace
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: anthropic>=0.40.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+
+# ACT Ledger
+
+`actl` is the ACT Ledger CLI: a local-first API cost tracker and session trace for recorded API calls.
+
+Current provider support is `Claude API`. The product name stays provider-neutral so future provider support can be added without changing the public CLI.
+
+ACT Ledger keeps everything on your machine:
+
+- capture live API calls locally through the Python wrapper
+- keep an append-only local session archive
+- inspect saved sessions later
+- export saved sessions as JSONL
+
+Nothing is sent anywhere except the API call you were already making.
+
+## Install
+
+```bash
+pip install claude-act
+```
+
+Public launchers:
+
+- `actl`
+- `act-ledger`
+- `claude-act` (backward-compatible)
+
+## First Run
+
+```bash
+actl init
+```
+
+By default, ACT Ledger saves config and local session data under `~/.act-ledger/`.
+
+## Common Commands
+
+```bash
+actl stats
+actl list
+actl read <session_id>
+actl dump <session_id>
+actl help
+```
+
+Use `actl doctor` only when you need troubleshooting for config or local archive problems.
+
+## Wrap the Claude client
+
+```python
+from claude_act import ClaudeAct
+
+client = ClaudeAct()
+
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=256,
+    messages=[
+        {"role": "user", "content": "Explain recursion in two short paragraphs."}
+    ],
+)
+```
+
+If you already construct an Anthropic client elsewhere, wrap that client instead:
+
+```python
+import anthropic
+from claude_act import ClaudeAct
+
+base_client = anthropic.Anthropic()
+client = ClaudeAct(client=base_client)
+```
+
+## Inspect The Archive
+
+`stats` shows usage and cost totals. `list` shows saved sessions. `read` opens one saved session. `dump` writes raw JSONL records for later analysis. `export` remains available as a backward-compatible alias.
+
+## What gets recorded
+
+Each finalized call record includes the request/response payload, model, token usage, latency, pricing metadata when available, and any API error information.
+
+Streaming calls are finalized once at the end of the stream and written as a single completed record.
+
+## Storage layout
+
+```text
+~/.act-ledger/
+  config.json
+  index.json
+  sessions/YYYY-MM-DD_<session_id>.jsonl
+  errors.jsonl
+```
+
+`storage_root` refers to this archive root. Older configs that pointed at `.../sessions` are normalized automatically.
+
+## Runtime guarantees
+
+- archive writes are append-only
+- logging failures stay non-fatal to the wrapped API call
+- local archive errors are written to `errors.jsonl`
+- session listing and dumps work from the local archive only
+
+## Privacy and archive note
+
+This tool records request and response payloads locally on your machine so you can inspect sessions later. Review your own storage, retention, and redaction needs before using it with sensitive prompts or outputs.
+
+## Public Command Surface
+
+The supported public commands for this release are:
+
+- `actl`
+- `actl help`
+- `actl init`
+- `actl stats`
+- `actl list`
+- `actl read <session_id>`
+- `actl dump <session_id>`
+- `actl doctor`
+
+## Scope note for this bundle
+
+This source bundle ships the core CLI and Python wrapper. The `viewer` command remains in the codebase for compatibility, but the desktop viewer assets are not included in this package.
