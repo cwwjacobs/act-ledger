@@ -4,7 +4,10 @@ Tests for claude-act v0.1.0
 from __future__ import annotations
 
 import json
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python <3.11 test env fallback
+    import tomli as tomllib
 import uuid
 from pathlib import Path
 from unittest.mock import MagicMock, patch
